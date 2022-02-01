@@ -23,15 +23,9 @@ setuptools.setup(
                         'numpy',
                         'uncertainties',
                         'opencv-python',
-                        'os',
-                        're',
                         'pandas',
                         'spe_loader',
-                        'copy',
                         'networkx',
-                        'operator',
-                        'toolz',
-                        'pickle',
                         'matplotlib'
 ],
 )
