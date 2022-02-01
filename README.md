@@ -1,0 +1,1 @@
+This package is a collection of different functions and classes to work with scientific data in the formats .csv, .spe (by Princeton Instruments) and .img (by Hamamatsu).
