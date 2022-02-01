@@ -24,7 +24,7 @@ setuptools.setup(
                         'uncertainties',
                         'opencv-python',
                         'pandas',
-                        'spe_loader',
+                        'spe2py',
                         'networkx',
                         'matplotlib'
 ],
