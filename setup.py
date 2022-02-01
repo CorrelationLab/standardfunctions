@@ -22,7 +22,7 @@ setuptools.setup(
     install_requires = ['scipy',
                         'numpy',
                         'uncertainties',
-                        'cv2',
+                        'opencv-python',
                         'os',
                         're',
                         'pandas',
