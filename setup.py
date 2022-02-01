@@ -26,6 +26,7 @@ setuptools.setup(
                         'pandas',
                         'spe2py',
                         'networkx',
-                        'matplotlib'
+                        'matplotlib',
+                        'toolz'
 ],
 )
