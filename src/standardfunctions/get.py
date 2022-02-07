@@ -336,9 +336,6 @@ class Mes_Object:
 def saveMES_ObjectDataAsCSV(MES_Object, SavePath):
     if os.path.isdir(SavePath):
         SavePath = os.path.join(SavePath, (MES_Object.Name + ".csv"))
-    elif not os.path.isfile(SavePath):
-        print("Given SavePath is neither DirectoryPath nor FilePath")
-        raise
     np.savetxt(SavePath, MES_Object.Data, delimiter=',')
 
 
