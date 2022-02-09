@@ -16,7 +16,11 @@ import pickle
 
 def getPathsFromFolderTree(FolderPath, FileTypes=None, Pattern=None):
     """
-        returns all Files in a given FolderPath and its subfolders, which belongs to given FileTypes and/or and which filenames fulfill a given Pattern
+        This function returns all files in a given directory and its subdirectories. In case of failure it returns None
+        The optional parameters are:
+        - FileTypes: specifies the returned files by their extension. The Extensions have to inserted as a list (eg. FileTypes=['.spe', '.img']) 
+        - Pattern: specifies the returned files by their a pattern for their name. The pattern uses the formal construction of regular expressions as has to be given as a raw string
+
     """
     try:
         if ((FileTypes is None) and (Pattern is None)):
@@ -33,7 +37,9 @@ def getPathsFromFolderTree(FolderPath, FileTypes=None, Pattern=None):
 
 def getBaseNameAndExtFromPath(FilePath):
     """
-        returns Tupel of filebasename and fileextension of a given FilePath. If the path belongs to a folder, the basename coresponds to the folders name and the fileextension is ''
+        returns tuple of (filename,extension) of a given path.
+        - if path corresponds to a directory it returns (filename,'')
+        - if it fails it returns (None, None)
     """
     try:
         return os.path.splitext(os.path.basename(FilePath))
@@ -44,7 +50,18 @@ def getBaseNameAndExtFromPath(FilePath):
 # Manipulate Paths####################################################################################
 
 
-def addToFileNames(File_FolderPath, NameAdditions, FileTypes=None, Pattern=None, IgnoreIsIn=False):
+def addToFileNames(File_FolderPath, NameAdditions, FileTypes=None, Pattern=None, IgnoreIsIn=False, Seperator='_'):
+    """
+    extend the filename of one or multiple files by a list of constant strings which are seperated by a Seperator
+    Necessary Arguments:
+        - File_FolderPath:  path to a single file or to a Directory. In case of last all files of given filetypes and / or pattern will be modified. Therefore 'getPathsFromFolderTree' is used.
+        - NameAdditions:    list Of strings which should be added
+    Optional Arguments:
+        - FileTypes:        list of extensions eg: FileTypes=['.spe', '.img']
+        - Pattern:          regular expression which defines the files which should be modified
+        - IgnoreIsIn:       Boolean: if True it will be also checked if a given substring is already present in the actual modified filename
+        - Seperator:        used seperator for the appended substrings 
+    """
     if os.path.isfile(File_FolderPath):
         FilePaths = [File_FolderPath]
     if os.path.isdir(File_FolderPath):
@@ -55,20 +72,22 @@ def addToFileNames(File_FolderPath, NameAdditions, FileTypes=None, Pattern=None,
         for f in FilePaths:
             NewNameAdditions = [g for g in NameAdditions if g not in f]
             if NewNameAdditions is not []:
-                NewNameAdditions = '_'.join(NewNameAdditions) + '_'
+                NewNameAdditions = Seperator.join(NewNameAdditions) + Seperator
             else:
                 NewNameAdditions = ""
             NewName = os.path.join(os.path.dirname(f), NewNameAdditions + os.path.basename(f))
             os.rename(f, NewName)
     else:
         for f in FilePaths:
-            NewName = os.path.join(os.path.dirname(f), '_'.join(NameAdditions) + '_' + os.path.basename(f))
+            NewName = os.path.join(os.path.dirname(f), Seperator.join(NameAdditions) + Seperator + os.path.basename(f))
             os.rename(f, NewName)
 
 
 def renameFileNamesByPattern(File_FolderPath, Substitute, FileTypes=None, Pattern=None, SubstituteIsPattern=True, IgnoreIsIn=True):
     """
+        !!!WIP!!!
         renames Filesnames which have a special pattern by substituting the pattern with another one. ATTENTION: It does not care if the replacement has already be done in the past !!!
+
     """
     
     if os.path.isfile(File_FolderPath):
@@ -104,6 +123,12 @@ def renameFileNamesByPattern(File_FolderPath, Substitute, FileTypes=None, Patter
 
 
 def copyDirTree(InputPath, OutputPath):
+    """
+    recreates a directorytree which seeds from a given directory at another directory:
+    Necessary Arguments:
+    - InputPath: Path where the original directorytree can be found
+    - OutPutPath: Path where directorytree should be recreated    
+    """
     for dirpath, dirnames, filenames in os.walk(InputPath):
         structure = os.path.join(OutputPath, os.path.relpath(dirpath, InputPath))
         if not os.path.isdir(structure):
@@ -118,7 +143,12 @@ def copyDirTree(InputPath, OutputPath):
 
 def getDataFromCSV(FilePath, Header=None, Seperator=','):
     """
-        returns Data in given CSV-File in Form of a numpy array
+    returns Data of a CSV-File as numpy array. In case of failure it returns None
+    Necessary Arguments:
+    - FilePath:     path to file
+    Optional Arguments: 
+    - Header:       header of the csv file
+    - Seperator:    seperator used in the csv file
     """
     try:
         return np.array(pd.read_csv(FilePath, header=Header, sep=Seperator))
@@ -128,7 +158,12 @@ def getDataFromCSV(FilePath, Header=None, Seperator=','):
 
 def getDataFromSPE(FilePath, Frame=0, ROI=0):
     """
-    returns Data from an SpeFile. Standard is Frame 0 and ROI 0
+    returns Data of an SpE-File as numpy array. In case of failure it returns None
+    Necessary Arguments:
+    - FilePath:       path to file
+    Optional Arguments:
+    - Frame:          framenumber in case of multiple frames saved to one file. default is 0
+    - ROI:            ROInumber in case of multiple ROIs are saved to one frame. default is 0
     """
     try:
         return np.array((sl.load_from_files([FilePath])).data[Frame][ROI]).astype(np.float64)
@@ -138,7 +173,9 @@ def getDataFromSPE(FilePath, Frame=0, ROI=0):
 
 def getAllDataFromSPE(FilePath):
     """
-    returns all Data of an SpeFile
+    returns Frames and ROIS of an SpeFile as an 2D list of numpy arrays. In case of failure it returns None
+    Necessary Arguments:
+    - FilePath:       path to file
     """
     try:
         return list((sl.load_from_files([FilePath])).data)
@@ -148,7 +185,9 @@ def getAllDataFromSPE(FilePath):
 
 def getDataFromIMG(FilePath):
     """
-    returns Data from an IMG file
+    returns Data from an IMG file as numpy array. In case of failure it returns None
+    Necessary Arguments:
+    - FilePath:       path to file
     """
     try:
         File = open(FilePath, 'rb')
