@@ -202,11 +202,18 @@ def getDataFromIMG(FilePath):
         return None
 
 
-# Get MetaData
+# Get MetaData From File
 
 def getMetaDataInfoFromFilePath(FilePath, Pattern, SubPattern=r"[0-9]+[i]?[0-9]*", Substitution=("i", "."), Type=float):
     """
-    returns Metadata, which is given in a FilePath by regular expression Pattern. A Subpattern is used to get the actual values from the searched quantity 
+    returns MetaData which is saved inside a filepath. In case of failure it returns None
+    Necessary Arguments:
+    - Filepath:       path to file
+    Pattern:        regular expression of the quantity you are searching (eg. Pattern=r"Pow[0-9]+[i]?[0-9]*")
+    - SubPattern:     regular expression of the way the value of the quantity is saved. default is SubPattern=r"[0-9]+[i]?[0-9]*"
+    - Substitution:   tupel of the way decimal points are saved. default is Substitution=("i", ".")
+    - Type:           datatype of the saved quantity. default is float
+
     """
     try:
         return Type(re.sub(Substitution[0], Substitution[1], re.search(SubPattern, (re.search(Pattern, FilePath).group())).group()))
@@ -218,7 +225,9 @@ def getMetaDataInfoFromFilePath(FilePath, Pattern, SubPattern=r"[0-9]+[i]?[0-9]*
 
 def getMetaDataFromIMG(FilePath):
     """
-    returns MetaData of an IMG File as a String
+    returns MetaData of an IMG File as a String, In case of failure it returns None
+    Necessary Arguments:
+    - FilePath:         path to file
     """
     try:
         File = open(FilePath, 'rb')
@@ -231,9 +240,19 @@ def getMetaDataFromIMG(FilePath):
         return None
 
 
+
+# NEEDS REVISION
 def getMetaDataInfoFromIMG(FilePath, Pattern, SubPattern=r"[0-9]+[i]?[0-9]*", Type=float):
     """
-    returns Quantity which is given in IMG MetaData of an IMG File by FilePath, which fulfills a given regular expression
+    ATTENTION : THIS FUNCTION SEEMS TO HAVE PROBLEMS AND NEED A REVISION
+    returns Quantity which is saved in the MetaData of an img file. In case of failure it returns None 
+    Necessary Arguments:
+    - FilePath:       path to file
+    - Pattern:        regular expression under which the searched quantity can be found in the img files MetaData
+    Optional Arguments:
+    - SubPattern:     regular expression which can be used to find the value of the searched quantity inside the pattern. default is SubPattern=r"[0-9]+[i]?[0-9]*"
+    - Type:           datatype of the returned value. default is float
+    given in IMG MetaData of an IMG File by FilePath, which fulfills a given regular expression
     """
     try:
         File = open(FilePath, 'rb')
@@ -245,9 +264,18 @@ def getMetaDataInfoFromIMG(FilePath, Pattern, SubPattern=r"[0-9]+[i]?[0-9]*", Ty
         return None
 
 
+# NEEDS REVISION
 def getMetaDataInfoFromIMG_MetaData(MetaData, Pattern, SubPattern=r"[0-9]+[.]?[0-9]*", SubberPattern=None, Type=float):
     """
-    returns Quantity which in given IMG MetaData, which fulfills a given regular expression
+    ATTENTION: THIS FUNCTION HAS NO ERRORHANDLING
+    returns Quantity which is saved in a given img MetaData. In case of failure it returns None 
+    Necessary Arguments:
+    - FilePath:       path to file
+    - Pattern:        regular expression under which the searched quantity can be found in the img files MetaData
+    Optional Arguments:
+    - SubPattern:     regular expression which can be used to find the value of the searched quantity inside the pattern. default is SubPattern=r"[0-9]+[i]?[0-9]*"
+    - Type:           datatype of the returned value. default is float
+    given in IMG MetaData of an IMG File by FilePath, which fulfills a given regular expression
     """
     if SubberPattern is None:
         return Type(re.search(SubPattern, (re.search(Pattern, MetaData).group())).group())
@@ -258,16 +286,26 @@ def getMetaDataInfoFromIMG_MetaData(MetaData, Pattern, SubPattern=r"[0-9]+[.]?[0
 
 def getMetaDataInfoFromSPE(Spe, Quantity):
     """
-    returns MetaData from SpeFile by given Path
+    returns quantity which is saved in the metadata of a spe file
+    Necessary Arguments:
+    - Spe:          path to spe file
+    - Quantity:     searched quantity: For more information about the supported quantities look up for the function "getMetaDataInfoFromSpeFile"
     """
-    SPEFile = sl.load_from_files([Spe])
-    return getMetaDataInfoFromSPEFile(SPEFile, Quantity)
+    try:
+        SPEFile = sl.load_from_files([Spe])
+        return getMetaDataInfoFromSPEFile(SPEFile, Quantity)
+    except:
+        return None
 
 
 
 def getMetaDataInfoFromSPEFile(SPEFile, Quantity):
     """
-    returns Info From MetaData from Spe Object
+    ATTENTION: NO ERRORHANDLING INCLUDED
+    returns quantity SpeMetaData
+    Necessary Arguments:
+    - SPEFile:      Spe Object, created by spe_loaders.load_from_files([])
+    - Quantity:     quantity which can be found in the spefiles xmltree. Currently supported quantities are: "ExpTime", "WaveLength", "CenterWaveLength", "Grating". Every other quantity returns None
     """
     if Quantity == "ExpTime":
         return int(SPEFile.footer.SpeFormat.DataHistories.DataHistory.Origin.Experiment.Devices.Cameras.Camera.ShutterTiming.ExposureTime.cdata)
@@ -285,8 +323,25 @@ def getMetaDataInfoFromSPEFile(SPEFile, Quantity):
 
 # Basic Classes:
 
-
+# NEEDS REVISION
 def getParameters(FilePath, Extension, Parameters):
+    """
+    ATTENTION: THIS FUNCTION USES the bad getMetaDataInfoFromIMG AND NEEDS A REVISION
+    returns dictionary of Parameters which can be searched in the filepath or the files metadata
+    Necessary Arguments:
+    - FilePath:     path to file
+    - Extension:    file extension
+    - Parameters:   dict of the searched Parameters. The dict has to have a specific structure to work: {"KEY1": [QUANTITYPLACE, ADDARGUMENT1, ADDARGUMENT2...]}
+                    
+                    The Function has three methods for searching:
+                     QUIANTITYPLACE is 'd' for direct:      Then their is only one ADDARGUMENT which is the actual value
+                                    is 'f' for filepath:    Then the ADDARGUMENTS are Pattern, SubPattern, Substitution and Type. For more Information read the doc of "getMetaDataInfoFromFilePath"
+                                    is 'm' for metadata:    Then the ADDARGUMENTS differ for .spe and .img files:
+                                                            For .spe files they are Quantity. For more Information read the doc of "getMetaDataInfoFromSPEFile"
+                                                            For .img files they are Pattern, SubPattern and Type. For more Information read the doc of "getMetaDataInfoFromIMG"
+
+
+    """
     assert type(Parameters) is dict, "The Structure you are using is not correct Youre using" + str(type(Parameters))
     MyParameters = {}
     Keys = Parameters.keys()
