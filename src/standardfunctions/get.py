@@ -9,6 +9,8 @@ import networkx as kx
 from operator import itemgetter
 import toolz
 import pickle
+from scipy.optimize import curve_fit
+from uncertainties import uarray
 
 #Basic Functions:
 
@@ -513,6 +515,47 @@ def normRowwise(Data_2D, ScalingFactor=1):
     Maxima = np.max(Data_2D, axis=(1), keepdims=True)
     Maxima[Maxima <= 0] = 1
     return Data_2D / Maxima * ScalingFactor
+
+
+def linearizeWaveLength(MES_Object, CentralPixel, FitInterval, IgnoreBordersOfCalibration=False, returnError = False):
+    """
+    NOT YET TESTED
+    returns the parameter of a linear fit of the wavelenth calibration
+    Necessary Arguments:
+    - MES_Object: MES_Object which includes the WaveLength Calibration
+    - CentralPixel: Central Pixel of the area where the fit should be done
+    - FitInterval: Size of the FitInterval: The Interval then reachs from CentralPixel-FitInterval: CentralPixel+FitInterval
+    Optional Arguments:
+    - IgnoreBordersOfCalibration: Bool to IgnoreIf the Fittingarea can be  assymetric in case parts of the original one are out of scope, Default is False
+    - returnError: Bool to return also the error of the linearization. default is False
+    """
+    assert(MES_Object.Ext == '.spe'),"The Input MES_Object was not created from an spefile"
+    assert("CenterWaveLength" in MES_Object.Static_Parameters.keys()),"The Input MES_Object was created from a file without a measured energy dimension"
+    CalibrationTable = MES_Object.CalibrationInfo["WaveLength"]
+    if IgnoreBordersOfCalibration is False:
+        assert(CentralPixel-FitInterval >= 0 and CentralPixel+FitInterval < len(CalibrationTable)),"Parts of your FitInterval are of scope of the Calibrationfile"# Last Input of Len could be exchanged by the lenth of the calibrationfile if known
+        StartPixel = CentralPixel-FitInterval
+        EndPixel = CentralPixel+FitInterval
+    else:
+        StartPixel = max(CentralPixel-FitInterval, 0)
+        EndPixel = min(CentralPixel-FitInterval, len(CalibrationTable)-1)
+    
+    def linear(x,a,b):
+        return a*x+b
+    a_s = (CalibrationTable[EndPixel]-CalibrationTable[StartPixel])/(EndPixel-StartPixel)
+    b_s = CalibrationTable[StartPixel] - StartPixel * a_s
+    try:
+        Parameters, Error = curve_fit(linear, CalibrationTable[StartPixel:EndPixel+1],p0=[a_s,b_s])
+    except:
+        print("CurveFit could not converge")
+        return None
+    if returnError is False:
+        return np.array(Parameters)
+    else:
+        Error = np.sqrt(np.diag(Error))
+        return uarray(Parameters, Error)
+
+        
 
 #--OBJECT ORIENTED Functions
 
