@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='standardfunctions',
-    version='1.0.1 a',
+    version='1.0.1 b',
     author='Yannik Brune',
     author_email='yannik.brune@tu-dortmund.de',
     description='collection of functions to analyse data in csv, spe and img format',

@@ -11,6 +11,7 @@ import toolz
 import pickle
 from scipy.optimize import curve_fit
 from uncertainties import uarray
+import scipy.constants as sc
 
 #Basic Functions:
 
@@ -517,18 +518,31 @@ def normRowwise(Data_2D, ScalingFactor=1):
     return Data_2D / Maxima * ScalingFactor
 
 
-def linearizeWaveLength(MES_Object, CentralPixel, FitInterval, IgnoreBordersOfCalibration=False, returnError = False):
+def convertWaveLengthToEnergy(WaveLength, n=1.0002702):
+    """
+    calculates the Energy for photons of a given wavelength
+    Necesary Arguments:
+    WaveLength:     Input Wavelength
+    Optional Arguments:
+    n:              real refractive index ofthe media (normally air). default is n=1.0002702. more specific values fpor air can be calculated by using the calculator on the website https://emtoolbox.nist.gov/Wavelength/Ciddor.asp
+    """
+    assert(WaveLength > 0 and n > 0), "Wavelength and n must be positive"
+    return sc.h * sc.c / (WaveLength*sc.e*10**(-9)*n)
+
+def linearizeWaveLength(MES_Object, CentralPixel, FitInterval,Unit="nm", n=1.0002702, IgnoreBordersOfCalibration=False, returnError = False):
     """
     NOT YET TESTED
-    returns the parameter of a linear fit of the wavelenth calibration
+    returns the parameter of a linear fit of the wavelenth calibration, in case of failure it returns None
     Necessary Arguments:
     - MES_Object: MES_Object which includes the WaveLength Calibration
     - CentralPixel: Central Pixel of the area where the fit should be done
     - FitInterval: Size of the FitInterval: The Interval then reachs from CentralPixel-FitInterval: CentralPixel+FitInterval
     Optional Arguments:
+    - n: refractive Index of the used medium. defaul is 1.0002702 for air at 770nm.
     - IgnoreBordersOfCalibration: Bool to IgnoreIf the Fittingarea can be  assymetric in case parts of the original one are out of scope, Default is False
     - returnError: Bool to return also the error of the linearization. default is False
     """
+    assert(Unit == "nm" or Unit=="eV"), "Only supported Units are either 'nm' or 'eV'"
     assert(MES_Object.Ext == '.spe'),"The Input MES_Object was not created from an spefile"
     assert("CenterWaveLength" in MES_Object.Static_Parameters.keys()),"The Input MES_Object was created from a file without a measured energy dimension"
     CalibrationTable = MES_Object.CalibrationInfo["WaveLength"]
@@ -539,6 +553,8 @@ def linearizeWaveLength(MES_Object, CentralPixel, FitInterval, IgnoreBordersOfCa
     else:
         StartPixel = max(CentralPixel-FitInterval, 0)
         EndPixel = min(CentralPixel-FitInterval, len(CalibrationTable)-1)
+    if Unit=='eV':
+        CalibrationTable = [convertWaveLengthToEnergy(f,n) for f in CalibrationTable]
     
     def linear(x,a,b):
         return a*x+b
@@ -549,6 +565,7 @@ def linearizeWaveLength(MES_Object, CentralPixel, FitInterval, IgnoreBordersOfCa
     except:
         print("CurveFit could not converge")
         return None
+
     if returnError is False:
         return np.array(Parameters)
     else:
