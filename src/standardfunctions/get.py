@@ -733,5 +733,30 @@ def writeHPDTAProfile(Data, Header, SavePath, Scaling=100000):
     File.close()
 
 
-
-
+# Other Stuff (It could change its folder, so keep care)
+def calcMagnifactionOfLensSystem(Lenses, PixelSize=20,WaveLength=770):
+    """
+    calculates the Magnificationfactor of a given lenssystem and returns the conversionfactor from px to µm for even number of lenses or to 1/µm for odd number of lenses
+    Necessary Arguments:
+    - Lenses:       List of Focusdistances of the lenssystem. the lenses must be ordererd like in the system. All lenses must be convex so f>0
+    Optional Parameters:
+    - PixelSize: Pixelsize of a pixel in the CCD. default is 20µm
+    - WaveLength: approximate Wavelengt of the measuered Light. default is 770nm
+    """
+    assert(all([f>0 for f in Lenses])is True),"Alle Lenses have to be convex so f>0"
+    if len(Lenses)%2 == 0: #lenses is even
+        M = 1
+        for i in range(0,len(Lenses)):
+            if (i+1)%2 == 1:
+                M = M / Lenses[i]
+            else:
+                M = M * Lenses[i]
+        return PixelSize / M
+    else:
+        M = 1
+        for i in range(0,len(Lenses)):
+            if (i+1)%2 == 0:
+                M = M / Lenses[i]
+            else:
+                M = M * Lenses[i]
+        return (2*np.pi * PixelSize) / (WaveLength *10**(-3) *M)
