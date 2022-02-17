@@ -529,12 +529,12 @@ def convertWaveLengthToEnergy(WaveLength, n=1.0002702):
     assert(WaveLength > 0 and n > 0), "Wavelength and n must be positive"
     return sc.h * sc.c / (WaveLength*sc.e*10**(-9)*n)
 
-def linearizeWaveLength(MES_Object, CentralPixel, FitInterval,Unit="nm", n=1.0002702, IgnoreBordersOfCalibration=False, returnError = False):
+def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterval,Unit="nm", n=1.0002702, IgnoreBordersOfCalibration=False, returnError = False):
     """
     NOT YET TESTED
     returns the parameter of a linear fit of the wavelenth calibration, in case of failure it returns None
     Necessary Arguments:
-    - MES_Object: MES_Object which includes the WaveLength Calibration
+    - CalibrationFile__OR__MES_Object: Wavelengthcalibrationfile of the monochromator which can be given directly or through an MES_Object which includes the WaveLength Calibration
     - CentralPixel: Central Pixel of the area where the fit should be done
     - FitInterval: Size of the FitInterval: The Interval then reachs from CentralPixel-FitInterval: CentralPixel+FitInterval
     Optional Arguments:
@@ -542,10 +542,13 @@ def linearizeWaveLength(MES_Object, CentralPixel, FitInterval,Unit="nm", n=1.000
     - IgnoreBordersOfCalibration: Bool to IgnoreIf the Fittingarea can be  assymetric in case parts of the original one are out of scope, Default is False
     - returnError: Bool to return also the error of the linearization. default is False
     """
-    assert(Unit == "nm" or Unit=="eV"), "Only supported Units are either 'nm' or 'eV'"
-    assert(MES_Object.Ext == '.spe'),"The Input MES_Object was not created from an spefile"
-    assert("CenterWaveLength" in MES_Object.Static_Parameters.keys()),"The Input MES_Object was created from a file without a measured energy dimension"
-    CalibrationTable = MES_Object.CalibrationInfo["WaveLength"]
+    if type(CalibrationFile__OR__MES_Object) is Mes_Object:
+        assert(Unit == "nm" or Unit=="eV"), "Only supported Units are either 'nm' or 'eV'"
+        assert(CalibrationFile__OR__MES_Object.Ext == '.spe'),"The Input MES_Object was not created from an spefile"
+        assert("CenterWaveLength" in CalibrationFile__OR__MES_Object.Static_Parameters.keys()),"The Input MES_Object was created from a file without a measured energy dimension"
+        CalibrationTable = CalibrationFile__OR__MES_Object.CalibrationInfo["WaveLength"]
+    elif type(CalibrationFile__OR__MES_Object) is list:
+        CalibrationTable = CalibrationFile__OR__MES_Object
     if IgnoreBordersOfCalibration is False:
         assert(CentralPixel-FitInterval >= 0 and CentralPixel+FitInterval < len(CalibrationTable)),"Parts of your FitInterval are of scope of the Calibrationfile"# Last Input of Len could be exchanged by the lenth of the calibrationfile if known
         StartPixel = CentralPixel-FitInterval
