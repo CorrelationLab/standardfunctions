@@ -10,7 +10,7 @@ from operator import itemgetter
 import toolz
 import pickle
 from scipy.optimize import curve_fit
-from uncertainties import uarray
+from uncertainties.unumpy import uarray 
 import scipy.constants as sc
 
 #Basic Functions:
