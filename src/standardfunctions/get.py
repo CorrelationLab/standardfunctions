@@ -416,7 +416,7 @@ class Mes_Object:
                 self.CalibrationInfo["WaveLength"] = getMetaDataInfoFromSPE(FilePath, "WaveLength")
 
 
-        elif self.Ext == 'csv':
+        elif self.Ext == '.csv':
             self.Data = getDataFromCSV(FilePath)
             self.CalibrationState = {"OD": getMetaDataInfoFromFilePath(FilePath, "OD[0-9]+") if OD is None else OD,
                                      "ExpTime": getMetaDataInfoFromFilePath(FilePath) if ExpTime is None else ExpTime
