@@ -10,7 +10,8 @@ from operator import itemgetter
 import toolz
 import pickle
 from scipy.optimize import curve_fit
-from uncertainties.unumpy import uarray 
+from uncertainties.unumpy import uarray
+import uncertainties.umath as um
 import scipy.constants as sc
 
 #Basic Functions:
@@ -529,7 +530,7 @@ def convertWaveLengthToEnergy(WaveLength, n=1.0002702):
     assert(WaveLength > 0 and n > 0), "Wavelength and n must be positive"
     return sc.h * sc.c / (WaveLength*sc.e*10**(-9)*n)
 
-def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterval,Unit="nm", n=1.0002702, IgnoreBordersOfCalibration=False, returnError = False):
+def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterval,FittedPoint=None,Unit="nm", n=1.0002702, IgnoreBordersOfCalibration=False):
     """
     NOT YET TESTED
     returns the parameter of a linear fit of the wavelenth calibration, in case of failure it returns None
@@ -540,7 +541,6 @@ def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterv
     Optional Arguments:
     - n: refractive Index of the used medium. defaul is 1.0002702 for air at 770nm.
     - IgnoreBordersOfCalibration: Bool to IgnoreIf the Fittingarea can be  assymetric in case parts of the original one are out of scope, Default is False
-    - returnError: Bool to return also the error of the linearization. default is False
     """
     if type(CalibrationFile__OR__MES_Object) is Mes_Object:
         assert(Unit == "nm" or Unit=="eV"), "Only supported Units are either 'nm' or 'eV'"
@@ -564,16 +564,16 @@ def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterv
     a_s = (CalibrationTable[EndPixel]-CalibrationTable[StartPixel])/(EndPixel-StartPixel)
     b_s = CalibrationTable[StartPixel] - StartPixel * a_s
     try:
-        Parameters, Error = curve_fit(linear, CalibrationTable[StartPixel:EndPixel+1],p0=[a_s,b_s])
+        Parameter, Error = curve_fit(linear, CalibrationTable[StartPixel:EndPixel+1],p0=[a_s,b_s])
     except:
         print("CurveFit could not converge")
         return None
+    if FittedPoint is None:
+            return np.array(Parameter)
+    elif FittedPoint is not None:
+            return linear(FittedPoint,*Parameter)
 
-    if returnError is False:
-        return np.array(Parameters)
-    else:
-        Error = np.sqrt(np.diag(Error))
-        return uarray(Parameters, Error)
+
 
         
 
