@@ -547,7 +547,7 @@ def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterv
         assert(CalibrationFile__OR__MES_Object.Ext == '.spe'),"The Input MES_Object was not created from an spefile"
         assert("CenterWaveLength" in CalibrationFile__OR__MES_Object.Static_Parameters.keys()),"The Input MES_Object was created from a file without a measured energy dimension"
         CalibrationTable = CalibrationFile__OR__MES_Object.CalibrationInfo["WaveLength"]
-    elif type(CalibrationFile__OR__MES_Object) is list:
+    else:
         CalibrationTable = CalibrationFile__OR__MES_Object
     if IgnoreBordersOfCalibration is False:
         assert(CentralPixel-FitInterval >= 0 and CentralPixel+FitInterval < len(CalibrationTable)),"Parts of your FitInterval are of scope of the Calibrationfile"# Last Input of Len could be exchanged by the lenth of the calibrationfile if known
