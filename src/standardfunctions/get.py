@@ -763,3 +763,18 @@ def calcMagnifactionOfLensSystem(Lenses, PixelSize=20,WaveLength=770):
             else:
                 M = M * Lenses[i]
         return (2*np.pi * PixelSize) / (WaveLength *10**(-3) *M)
+
+def checkMissingBGs(DataFolderPath, BGFolderPath=None):
+    """checks given Data and BG Folders for calibration states with missing BG, Fileype needs to be .spe"""
+    Data = getPathsFromFolderTree(DataFolderPath, FileTypes=('.spe'))
+    Data = [Mes_Object(f) for f in Data]
+    if BGFolderPath is not None:
+        BGData = getPathsFromFolderTree(BGFolderPath, FileTypes=('.spe'))
+        BGData = [Mes_Object(f) for f in BGData]
+    else:
+        BGData=None
+    X = getSetOfDicts([{**f.CalibrationState, **f.Static_Parameters} for f in Data])
+    Y = getSetOfDicts([{**f.CalibrationState, **f.Static_Parameters} for f in BGData]) if BGData is not None else []
+    Delta = [f for f in X if f not in Y]
+    for f in Delta:
+        print(f)
