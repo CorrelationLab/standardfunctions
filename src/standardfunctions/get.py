@@ -741,10 +741,10 @@ def calcMagnifactionOfLensSystem(Lenses, PixelSize=20,WaveLength=770):
     """
     calculates the Magnificationfactor of a given lenssystem and returns the conversionfactor from px to µm for even number of lenses or to 1/µm for odd number of lenses
     Necessary Arguments:
-    - Lenses:       List of Focusdistances of the lenssystem. the lenses must be ordererd like in the system. All lenses must be convex so f>0
+    - Lenses:       List of Focusdistances of the lenssystem in mm. the lenses must be ordererd like in the system. All lenses must be convex so f>0.
     Optional Parameters:
-    - PixelSize: Pixelsize of a pixel in the CCD. default is 20µm
-    - WaveLength: approximate Wavelengt of the measuered Light. default is 770nm
+    - PixelSize: Pixelsize of a pixel in the CCD in µm. default is 20µm.
+    - WaveLength: approximate Wavelengt of the measuered Light in nm. default is 770nm
     """
     assert(all([f>0 for f in Lenses])is True),"Alle Lenses have to be convex so f>0"
     if len(Lenses)%2 == 0: #lenses is even
@@ -762,7 +762,7 @@ def calcMagnifactionOfLensSystem(Lenses, PixelSize=20,WaveLength=770):
                 M = M / Lenses[i]
             else:
                 M = M * Lenses[i]
-        return (2*np.pi * PixelSize) / (WaveLength *10**(-3) *M)
+        return (2*np.pi * PixelSize) / (WaveLength *M)
 
 def checkMissingBGs(DataFolderPath, BGFolderPath=None):
     """checks given Data and BG Folders for calibration states with missing BG, Fileype needs to be .spe"""
