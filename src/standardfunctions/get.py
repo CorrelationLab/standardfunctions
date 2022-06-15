@@ -564,7 +564,7 @@ def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterv
     a_s = (CalibrationTable[EndPixel]-CalibrationTable[StartPixel])/(EndPixel-StartPixel)
     b_s = CalibrationTable[StartPixel] - StartPixel * a_s
     try:
-        Parameter, Error = curve_fit(linear, CalibrationTable[StartPixel:EndPixel+1],p0=[a_s,b_s])
+        Parameter, Error = curve_fit(linear, list(range(StartPixel,EndPixel+1)),CalibrationTable[StartPixel:EndPixel+1],p0=[a_s,b_s])
     except:
         print("CurveFit could not converge")
         return None
