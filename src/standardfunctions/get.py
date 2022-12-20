@@ -456,7 +456,7 @@ def saveMES_ObjectASIMG(MES_Object, SavePath):
 
 def DictToList(Dict):
     Keys = Dict.keys()
-    return [(f, Dict[f]) for f in Keys]
+    return [(f, deepcopy(Dict[f])) for f in Keys]
 
 
 def removeDoublesMES_ObjectsFromList(MES_Objects):
@@ -483,9 +483,9 @@ def removeBG(Data_2D, BGData_2D, NoNegative=True):
 
 def cutData_2D(Data_2D, Borders_2D):
     '''
-    Extracts Submatrix of an given numpy 2D Array with the given Borders
+    Extracts Submatrix of an given numpy 2D Array with the given Borders, The upper limit is excluded
     '''
-    return Data_2D[Borders_2D[0]:Borders_2D[1], Borders_2D[2]:Borders_2D[3]]
+    return deepcopy(Data_2D[Borders_2D[0]:Borders_2D[1], Borders_2D[2]:Borders_2D[3]])
 
 
 def cutData(MES_Object, Borders_2D):
@@ -508,6 +508,9 @@ def Mean_Simple(Data_2D):
 
 
 def Mean_OfOverRelTreshold(Data_2D, RelThreshold):
+    """
+    The Threshold which is given as parameter is relative and is internally multiplied with the images maximum intensity value
+    """
     Threshold = RelThreshold * max(np.ravel(Data_2D))
     Data = Data_2D.ravel()
     return np.mean(np.array([f for f in Data if f > Threshold]))
@@ -537,7 +540,7 @@ def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterv
     Necessary Arguments:
     - CalibrationFile__OR__MES_Object: Wavelengthcalibrationfile of the monochromator which can be given directly or through an MES_Object which includes the WaveLength Calibration
     - CentralPixel: Central Pixel of the area where the fit should be done
-    - FitInterval: Size of the FitInterval: The Interval then reachs from CentralPixel-FitInterval: CentralPixel+FitInterval
+    - FitInterval: Size of the FitInterval: The Interval then reachs from CentralPixel-FitInterval: CentralPixel+FitInterval, The endpoint is excluded
     Optional Arguments:
     - n: refractive Index of the used medium. defaul is 1.0002702 for air at 770nm.
     - IgnoreBordersOfCalibration: Bool to IgnoreIf the Fittingarea can be  assymetric in case parts of the original one are out of scope, Default is False
@@ -581,6 +584,7 @@ def linearizeWaveLength(CalibrationFile__OR__MES_Object, CentralPixel, FitInterv
 
 
 def calibrateExpTime(MES_Object, normExpTime=100):
+    MES_Object = deepcopy(MES_Object)
     assert("ExpTime" in MES_Object.CalibrationState)
     MES_Object.Data = calibrateExpTimeBase(MES_Object.Data, MES_Object.CalibrationState["ExpTime"], normExpTime)
     MES_Object.CalibrationState["ExpTime"] = normExpTime
@@ -588,6 +592,7 @@ def calibrateExpTime(MES_Object, normExpTime=100):
 
 
 def calibrateExpNumber(MES_Object, normExpNumber=100):
+    MES_Object = deepcopy(MES_Object)
     assert("ExpNumber" in MES_Object.CalibrationState)
     MES_Object.Data = calibrateExpNumberBase(MES_Object.Data, MES_Object.CalibrationState["ExpNumber"], normExpNumber)
     MES_Object.CalibrationState["ExpNumber"] = normExpNumber
@@ -595,10 +600,10 @@ def calibrateExpNumber(MES_Object, normExpNumber=100):
 
 
 def remove_BG_correct(MES_Object, BG_Objects, NoNegative=True):
+    MES_Object = deepcopy(MES_Object)
     assert (MES_Object.CalibrationState == MES_Object.CalibrationOrigin and MES_Object.CalibrationInfo["BG"] is None)
     for f in BG_Objects:
         if MES_Object.CalibrationState == f.CalibrationState and MES_Object.Static_Parameters == f.Static_Parameters:
-            print(MES_Object.Path)
             MES_Object.Data = removeBG(MES_Object.Data, f.Data, NoNegative)
             MES_Object.CalibrationInfo["BG"] = f.Name
             return MES_Object
@@ -698,6 +703,7 @@ def showCalibrationMatrix(Calibration):
 
 
 def calibrate_MESObject_ToState(MES_Object, AimState, Calibration):
+    MES_Object = deepcopy(MES_Object)
     MES_Object.Data = (MES_Object.Data).astype('float64') * getCalibrationFromMatrix(MES_Object.CalibrationState, AimState, Calibration)
     MES_Object.CalibrationState = AimState
     MES_Object.CalibrationInfo["Calibration"] = Calibration
@@ -727,6 +733,7 @@ def getDataFromHPDTAProfile(FilePath, Delimiter=',', Type=float, AlsoReturnHeade
 
 
 def writeHPDTAProfile(Data, Header, SavePath, Scaling=100000):
+    Data = deepcopy(Data)
     File = open(SavePath, 'w')
     File.write("".join(Header))
     Data = Data.T
