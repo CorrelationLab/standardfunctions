@@ -1,1 +1,2 @@
 This package is a collection of different functions and classes to work with scientific data in the formats .csv, .spe (by Princeton Instruments) and .img (by Hamamatsu).
+It can be installed from the cmd using 'pip install .' when being in the directory with the setup.py. This also installs the required additional packages.
